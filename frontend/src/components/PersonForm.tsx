@@ -9,11 +9,16 @@ import { z } from "zod";
 // TASK 1
 const personSchema = z.object({
     id: z.string().min(1),
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    DOB: z.string().min(1),
+    phoneNumber: z.string().min(1),
+    email: z.string().email(),
 })
 
 // TASK 1
-const postPath = "";
-const putPath = "";
+const postPath = "/people/save";
+const putPath = "/people/get";
 
 type FormFields = z.infer<typeof personSchema>;
 
@@ -26,6 +31,7 @@ export default function PersonForm() {
 
     // Success message handling
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [unsuccessfulMessage, setUnsuccessfulMessage] = useState<string | null>(null);
     useEffect(() => {
         if (successMessage) {
             const timer = setTimeout(() => {
@@ -36,10 +42,26 @@ export default function PersonForm() {
         }
     }, [successMessage]);
 
+    useEffect(() => {
+        if (unsuccessfulMessage) {
+            const timer = setTimeout(() => {
+                setUnsuccessfulMessage(null);
+            }, 3000);
+
+            return () => clearTimeout(timer);
+        }
+    }, [unsuccessfulMessage]);
     // Form submission handling
+
+    
     const onSubmit: SubmitHandler<FormFields> = async (data: FormFields) => {
+        setUnsuccessfulMessage("");
+        // VALIDATION FOR TASK 2 (done on backend too for consistency - can never trust the user on the front end ;))
+        let isValidName = (data.firstName.charAt(0) === data.firstName.charAt(0).toUpperCase())
+        isValidName = (data.lastName.charAt(0) === data.lastName.charAt(0).toUpperCase() && isValidName)
+        if(isValidName) {
         try {
-            const url = isUpdating ? `http://localhost:8080${putPath}` : `http://localhost:8080${postPath}`;
+            const url = isUpdating ? `http://localhost:8080${putPath}/${data.id}` : `http://localhost:8080${postPath}`;
             const method = isUpdating ? "PUT" : "POST";
 
             const response = await fetch(url, {
@@ -49,43 +71,60 @@ export default function PersonForm() {
             });
             if (response.ok) {
                 const json = await response.json()
+                console.log(response)
                 // TASK 3
-                const dynamicSuccessMessage = "";
+                const dynamicSuccessMessage = isUpdating ? `Updated Person's details for id: ${json.id} - ` : `Created Person with the id: ${json.id} - `;
                 setSuccessMessage(dynamicSuccessMessage + JSON.stringify(json, null, 2));
             } else {
-                setSuccessMessage("Failed to create person");
+                setUnsuccessfulMessage("Failed to create person");
             }
         } catch (error) {
             console.log(error)
         }
+    } else {
+        setUnsuccessfulMessage("Names must start with a capital letter")
+    }
 
     }
 
     // Re-used classNames
-    const labelClassName = clsx("");
-    const inputClassName = clsx("text-black");
+    const labelClassName = clsx("text-black mt-5");
+    const inputClassName = clsx("text-black bg-white border border-gray-300 rounded px-4 py-2 mt-1");
     const errorClassName = clsx("text-red-400");
+    const buttonStyles = clsx("bg-blue-500 text-white px-4 py-2 rounded mt-4");
 
     return (
-        <div className="min-w-96">
+        <div className="p-10 bg-white rounded-lg shadow-md">
+        <div className="lg:min-w-96">
             <div>
-                <h1>Person</h1>
+                <h1 className={"text-black text-2xl"}>Person</h1>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col">
                 <label className={labelClassName} htmlFor="id">ID</label>
                 <input className={inputClassName} type="text" id="id" {...register("id")} />
-                <p className={errorClassName}>{errors.id?.message}</p>
 
                 {/* TASK 1 Add more attribute fields here */}
 
+                <label className={labelClassName} htmlFor="firstName">First Name</label>
+                <input className={inputClassName} type="text" id="firstName" {...register("firstName")} />
+                <label className={labelClassName} htmlFor="lastName">Last Name</label>
+                <input className={inputClassName} type="text" id="lastName" {...register("lastName")} />
+                <label className={labelClassName} htmlFor="DOB">Date Of Birth</label>
+                <input className={inputClassName} type="date" id="DOB" {...register("DOB")} />
+                <label className={labelClassName} htmlFor="phoneNumber">Phone Number</label>
+                <input className={inputClassName} type="tel" id="phoneNumber" {...register("phoneNumber")} />
+                <label className={labelClassName} htmlFor="email">Email</label>
+                <input className={inputClassName} type="email" id="email" {...register("email")} />
+                <p className={errorClassName}>{errors.id?.message}</p>
+
                 <div className="flex justify-between mt-4">
-                    <button
+                    <button className={buttonStyles}
                         type="submit"
                         onClick={() => setIsUpdating(false)}
                     >
                         Create
                     </button>
-                    <button
+                    <button className={buttonStyles}
                         type="submit"
                         onClick={() => setIsUpdating(true)}
                     >
@@ -95,6 +134,8 @@ export default function PersonForm() {
             </form>
 
             {successMessage && <p className="text-green-500 mt-4">{successMessage}</p>}
+            {unsuccessfulMessage && <p className="text-red-400 mt-4">{unsuccessfulMessage}</p>}
+        </div>
         </div>
     );
 }

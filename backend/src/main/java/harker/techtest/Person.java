@@ -11,4 +11,9 @@ public class Person {
 
     // Task 1
 
+    public String firstName;
+    public String lastName;
+    public String DOB;
+    public String phoneNumber;
+    public String email;
 }

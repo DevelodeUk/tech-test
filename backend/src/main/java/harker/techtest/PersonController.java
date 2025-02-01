@@ -1,6 +1,7 @@
 package harker.techtest;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -17,8 +18,8 @@ public class PersonController {
     private PersonService personService;
 
     // Change these to be the URL paths you want
-    private final String getPath = "";
-    private final String postPath = "";
+    private final String getPath = "people/get";
+    private final String postPath = "people/save";
 
     @GetMapping(getPath)
     public List<Person> getPeople() {
@@ -36,5 +37,9 @@ public class PersonController {
     }
 
     // Task 3
-    
+    @PutMapping(getPath + "/{id}")
+    public Person putPerson(@RequestBody Person personModel, @PathVariable("id") String id) {
+        return personService.putPerson(personModel,id);
+    }
+
 }
